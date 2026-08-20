@@ -1,0 +1,13 @@
+# OS固有の環境ファイル
+.DS_Store
+Thumbs.db
+
+# ログファイル
+*.log
+
+# VSCode設定（個人環境設定を衝突させないため）
+.vscode/*
+!.vscode/extensions.json
+
+# 環境設定ファイル（仮に将来作成する場合）
+.env
