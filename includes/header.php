@@ -15,10 +15,8 @@ if (session_status() === PHP_SESSION_NONE) {
     <title>旅行プラン作成・共有ツール</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Sortable.js (ドラッグ＆ドロップ用ライブラリ CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script src="js/main.js"></script>
-</head>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="/TECH-BASE-A7/js/main.js" defer></script></head>
 <body>
     <header class="site-header">
         <div class="header-container">

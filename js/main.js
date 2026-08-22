@@ -3,6 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+        console.log('main.js loaded');
     initializeSortable();
     initializeWeather();
 });
@@ -79,11 +80,13 @@ function initializeWeather() {
  * Open-Meteoから天気情報を取得
  */
 async function fetchWeather(area, container) {
+    console.log('[API Task] Area Weather Fetching for:', area);
+
     try {
         const locationResponse = await fetch(
             `https://geocoding-api.open-meteo.com/v1/search?name=${
                 encodeURIComponent(area)
-            }&count=1&language=ja&format=json`
+            }&count=10&language=ja&format=json&countryCode=JP`
         );
 
         if (!locationResponse.ok) {
@@ -91,10 +94,23 @@ async function fetchWeather(area, container) {
         }
 
         const locationData = await locationResponse.json();
-        const location = locationData.results?.[0];
+
+        // 日本の主要地域を直接補完
+        const fallbackLocations = {
+            '東京': { latitude: 35.6762, longitude: 139.6503 },
+            '大阪': { latitude: 34.6937, longitude: 135.5023 },
+            '京都': { latitude: 35.0116, longitude: 135.7681 },
+            '札幌': { latitude: 43.0618, longitude: 141.3545 },
+            '福岡': { latitude: 33.5904, longitude: 130.4017 },
+            '名古屋': { latitude: 35.1815, longitude: 136.9066 }
+        };
+
+        const location =
+            locationData.results?.[0] ||
+            fallbackLocations[area];
 
         if (!location) {
-            throw new Error('地域が見つかりません。');
+            throw new Error(`地域が見つかりません: ${area}`);
         }
 
         const weatherResponse = await fetch(
@@ -111,9 +127,11 @@ async function fetchWeather(area, container) {
 
         const weatherData = await weatherResponse.json();
 
+        console.log('[API Task] Weather data received:', weatherData);
+
         renderWeather(container, area, weatherData);
     } catch (error) {
-        console.error('天気情報の取得に失敗しました:', error);
+        console.error('[API Task] Weather fetch failed:', error);
         renderWeatherError(container);
     }
 }
