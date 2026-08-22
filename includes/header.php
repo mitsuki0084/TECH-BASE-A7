@@ -16,6 +16,8 @@ if (session_status() === PHP_SESSION_NONE) {
     <link rel="stylesheet" href="css/style.css">
     <!-- Sortable.js (ドラッグ＆ドロップ用ライブラリ CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="js/main.js"></script>
 </head>
 <body>
     <header class="site-header">
