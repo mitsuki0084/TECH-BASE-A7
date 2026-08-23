@@ -1,4 +1,3 @@
-
 <?php
 // filepath: c:\xampp\htdocs\TECH-BASE-A7\plan_detail.php
 /**
@@ -16,8 +15,8 @@
  *    - バックエンド側で天気API連携モジュールをコール、またはJSで描画。
  */
 require_once 'config/db.php';
-
-$planId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+// セッション開始
+$planId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);// プランIDを取得し、整数としてバリデーション
 
 if (!$planId) {
     exit('プランIDが指定されていません。');
@@ -26,29 +25,29 @@ if (!$planId) {
 /**
  * スケジュール追加処理
  */
-if ($_SERVER['REQUEST_METHOD'] === 'POST'
+if ($_SERVER['REQUEST_METHOD'] === 'POST'// POSTリクエストかつ、アクションがスケジュール追加の場合
     && ($_POST['action'] ?? '') === 'add_schedule'
-) {
+) {// 入力値の取得とバリデーション
     $dayNumber = filter_input(INPUT_POST, 'day_number', FILTER_VALIDATE_INT);
     $spotName = trim($_POST['spot_name'] ?? '');
     $timeSlot = trim($_POST['time_slot'] ?? '');
     $memo = trim($_POST['memo'] ?? '');
-
+// 日程番号とスポット名が有効な場合にスケジュールを追加
     if ($dayNumber && $spotName !== '') {
-        $sortStmt = $pdo->prepare(
+        $sortStmt = $pdo->prepare(// 新しいスケジュールの sort_order を決定するために、既存の最大 sort_order を取得
             'SELECT COALESCE(MAX(sort_order), 0) + 1
-             FROM schedules
-             WHERE plan_id = ?'
+            FROM schedules
+            WHERE plan_id = ?'
         );
         $sortStmt->execute([$planId]);
         $sortOrder = (int)$sortStmt->fetchColumn();
-
+// 新しいスケジュールを `schedules` テーブルに挿入
         $insertStmt = $pdo->prepare(
             'INSERT INTO schedules
                 (plan_id, day_number, spot_name, time_slot, memo, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?)'
+            VALUES (?, ?, ?, ?, ?, ?)'
         );
-
+// スケジュールを追加した後、プラン詳細ページにリダイレクト
         $insertStmt->execute([
             $planId,
             $dayNumber,
@@ -57,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
             $memo,
             $sortOrder
         ]);
-
-        header('Location: plan_detail.php?id=' . $planId);
+// リダイレクトして、フォームの再送信を防ぐ
+        header('Location: plan_detail.php?id=' . $planId);// リダイレクト後にスクリプトを終了
         exit;
     }
 
@@ -68,10 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 /**
  * プラン情報取得
  */
+// プラン情報を取得するためのSQLクエリを準備
 $planStmt = $pdo->prepare(
     'SELECT *
-     FROM plans
-     WHERE id = ?'
+    FROM plans
+    WHERE id = ?'
 );
 $planStmt->execute([$planId]);
 $plan = $planStmt->fetch(PDO::FETCH_ASSOC);
@@ -85,15 +85,24 @@ if (!$plan) {
  */
 $scheduleStmt = $pdo->prepare(
     'SELECT *
-     FROM schedules
-     WHERE plan_id = ?
-     ORDER BY day_number ASC, sort_order ASC, id ASC'
-);
+    FROM schedules
+    WHERE plan_id = ?
+    ORDER BY day_number ASC, sort_order ASC, id ASC'
+);// プランIDに基づいてスケジュールを取得し、日程番号、並び順、IDの昇順でソート
 $scheduleStmt->execute([$planId]);
 $schedules = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
+// 目的地の天気情報を表示するために、プランの目的地またはエリアを取得
+$destination = trim((string)($plan['destination'] ?? ''));
 
-$destination = $plan['destination'] ?? $plan['area'] ?? 'Tokyo';
+if ($destination === '') {
+    $destination = trim((string)($plan['area'] ?? ''));
+}
 
+if ($destination === '') {
+    $destination = '東京';
+}
+
+// HTMLヘッダーを読み込み
 require_once 'includes/header.php';
 ?>
 
@@ -117,8 +126,8 @@ require_once 'includes/header.php';
 </div>
 
 <div id="weather-info"
-     class="card"
-     data-area="<?= htmlspecialchars($destination, ENT_QUOTES, 'UTF-8') ?>">
+    class="card"
+    data-area="<?= htmlspecialchars($destination, ENT_QUOTES, 'UTF-8') ?>">
     <h3>目的地の天気予報</h3>
     <p>天気情報を読み込み中...</p>
 </div>
