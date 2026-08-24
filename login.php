@@ -51,8 +51,8 @@ require_once 'includes/header.php';
 
 <h2>ログイン</h2>
 <!-- TODO: 開発メインA 処理・フォームの実装を行うこと -->
-<?php if ($errorMessage !== ''): ?>
-    <p class="error"><?= htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8') ?></p>
+<?php if ($error !== ''): ?>
+    <p class="error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
 <?php endif; ?>
 
 <form method="post" action="login.php" class="form">
