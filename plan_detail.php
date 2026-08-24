@@ -95,10 +95,6 @@ $schedules = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
 $destination = trim((string)($plan['destination'] ?? ''));
 
 if ($destination === '') {
-    $destination = trim((string)($plan['area'] ?? ''));
-}
-
-if ($destination === '') {
     $destination = '東京';
 }
 
