@@ -2,16 +2,29 @@
 /**
  * 担当: 開発メインA
  * 画面名: ログアウト処理
- * 
- * 【実装仕様】
- * 1. $_SESSION 変数を空にする。
- * 2. セッションクッキーが存在する場合は削除する。
- * 3. `session_destroy()` を呼び出してセッションを完全破棄。
- * 4. login.php へリダイレクト。
  */
 
-session_start();
-// TODO: 開発メインA ログアウト処理の実装を行うこと
+require_once 'config/db.php';
+
+// $_SESSION を空にする
+$_SESSION = [];
+
+// セッションクッキーが存在する場合は削除する
+if (ini_get('session.use_cookies')) {
+    $params = session_get_cookie_params();
+    setcookie(
+        session_name(),
+        '',
+        time() - 42000,
+        $params['path'],
+        $params['domain'],
+        $params['secure'],
+        $params['httponly']
+    );
+}
+
+// セッションを完全破棄
+session_destroy();
 
 header('Location: login.php');
 exit;
