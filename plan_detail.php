@@ -122,8 +122,8 @@ $schedules = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
 // 目的地の天気情報を表示するために、プランの目的地またはエリアを取得
 $destination = trim((string)($plan['destination'] ?? ''));
 
-if ($destination === '') { // 目的地が未設定の場合はデフォルト値を設定
-    $errorMessage = ($errorMessage ?? '') . ' このプランに目的地が登録されていません。天気情報は表示できません。';
+if ($destination === '') {// 目的地が未設定の場合はデフォルト値を設定
+    $errorMessage = 'このプランに目的地が登録されていません。 天気情報は表示できません。';
     $destination = '東京';
 }
 
