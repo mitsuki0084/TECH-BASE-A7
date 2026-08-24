@@ -19,25 +19,23 @@
  *   のみ実行できるようにチェックを追加した（従来は誰でも実行可能だった）。
  * ・非公開(status=0)・強制非公開(status=2)のプランは、所有者本人または管理者のみ閲覧可能とした。
  */
+
+session_start();
 require_once 'config/db.php';
 
-$planId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT); // プランIDを取得し、整数としてバリデーション
+$planId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 if (!$planId) {
     exit('プランIDが指定されていません。');
 }
 
 $currentUserId = $_SESSION['user_id'] ?? null;
-$isAdmin       = (int)($_SESSION['role'] ?? 0) === 1;
+$isAdmin = (int)($_SESSION['role'] ?? 0) === 1;
 
-/**
- * プラン情報取得
- * 【④対応】add_schedule 処理より先に取得し、所有者チェックに使用する。
- */
 $planStmt = $pdo->prepare(
     'SELECT *
-    FROM plans
-    WHERE id = ?'
+     FROM plans
+     WHERE id = ?'
 );
 $planStmt->execute([$planId]);
 $plan = $planStmt->fetch(PDO::FETCH_ASSOC);
@@ -46,8 +44,8 @@ if (!$plan) {
     exit('指定されたプランが見つかりません。');
 }
 
-$isOwner = $currentUserId !== null && (int)$plan['user_id'] === (int)$currentUserId;
-
+$isOwner = $currentUserId !== null
+    && (int)$plan['user_id'] === (int)$currentUserId;
 // 【④対応】非公開・強制非公開プランは所有者本人または管理者のみ閲覧可能
 if ((int)$plan['status'] !== 1 && !$isOwner && !$isAdmin) {
     exit('このプランは非公開のため閲覧できません。');

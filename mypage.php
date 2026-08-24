@@ -9,28 +9,32 @@
  * 3. 各プランの「タイトル」「日程」「公開ステータス」を一覧表示。
  * 4. 各プランに対する「編集 (plan_edit.php)」「削除 (削除POST処理)」ボタンを配置。
  */
-
+session_start();
 require_once 'config/db.php';
-require_once 'includes/header.php';
-
 // 1. ログイン確認
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
+$_SESSION['user_id'] = (int)$user['id'];
+$_SESSION['role'] = (int)$user['role'];
+
+header('Location: mypage.php');
+exit;
 }
+require_once 'includes/header.php';
+
+
 
 // 2. データベースから自分のプランを取得する処理
-$user_id = $_SESSION['user_id'];
+$user_id = (int)$_SESSION['user_id'];
 // ※config/db.phpで $pdo が定義されている前提のコードです
-$stmt = $pdo->prepare("SELECT * FROM plans WHERE user_id = :user_id ORDER BY created_at DESC");
+$stmt = $pdo->prepare(
+    'SELECT *
+     FROM plans
+     WHERE user_id = :user_id
+     ORDER BY created_at DESC'
+);
 $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
 $stmt->execute();
 $plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
-/**
- * 削除処理
- * 【所有者チェック必須】必ず user_id 条件を付けて、他人のプランを削除できないようにする
- */
-// 自分が作成した全プラン（公開/非公開問わず）を取得
 ?>
 
 <h2>マイページ</h2>
@@ -58,7 +62,7 @@ $plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             <!-- 編集・削除ボタン（URLパラメーターでIDを渡す） -->
             <td>
-                <a href="plan_edit.php?id=<?= $plan['id'] ?>">編集</a>
+                    <a href="plan_detail.php?id=<?= (int)$plan['id'] ?>">編集</a> |
                 
                 <!-- 削除は確認メッセージを出すと安全です -->
                 <a href="plan_delete.php?id=<?= $plan['id'] ?>" onclick="return confirm('本当に削除してよろしいですか？');">削除</a>
