@@ -11,3 +11,4 @@ Thumbs.db
 
 # 環境設定ファイル（仮に将来作成する場合）
 .env
+_dev_login.php
