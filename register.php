@@ -15,13 +15,34 @@
 
 require_once 'config/db.php';
 
+$error ="";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST["name"];
     $email = $_POST["email"];
     $password = $_POST["password"];
 
-    //パスワードをハッシュ化
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    if (empty($name) || empty($email) || empty($password)) {
+        $error = "すべての項目を入力してください。";
+
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "正しいメールアドレスを入力してください。";
+
+    } else {
+
+        $sql = "SELECT id FROM users WHERE email = :email";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $user = $stmt->fetch();
+
+        if ($user) {
+            $error = "このメールアドレスは既に登録されています。";
+
+    } else {
+        //パスワードをハッシュ化
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     //usersテーブルへ登録
     $sql = "INSERT INTO users (username, email, password, role)
@@ -37,12 +58,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     header('Location: login.php');
     exit;
-
+        }
+    }
 }
+
 require_once 'includes/header.php';
 ?>
 
 <h2>ユーザー新規登録</h2>
+
+<?php
+if (!empty($error)) {
+    echo $error . "<br />";
+}
+?>
+
 <!-- TODO: 開発メインA 処理・フォームの実装を行うこと -->
 <form action="" method="post">
     <input type="text" name="name" placeholder="名前">
