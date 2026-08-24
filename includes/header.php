@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 共通ヘッダーパーツ
  * 概要: セッションの開始、共通HTML頭部、ナビゲーションバーの表示を行う。
@@ -14,22 +15,34 @@ if (session_status() === PHP_SESSION_NONE) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>旅行プラン作成・共有ツール</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Sortable.js (ドラッグ＆ドロップ用ライブラリ CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
     <header class="site-header">
         <div class="header-container">
-            <h1 class="logo"><a href="index.php">旅プランナー</a></h1>
+            <h1 class="logo">
+                <a href="index.php">旅プランナー</a>
+            </h1>
+
             <nav class="main-nav">
                 <ul>
                     <li><a href="index.php">プランを探す</a></li>
+
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li><a href="plan_create.php">新規プラン作成</a></li>
                         <li><a href="mypage.php">マイページ</a></li>
-                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 1): ?>
-                            <li><a href="admin_tags.php" class="admin-link">管理者画面</a></li>
+
+                        <?php if (
+                            isset($_SESSION['role']) &&
+                            $_SESSION['role'] === 1
+                        ): ?>
+                            <li>
+                                <a href="admin_tags.php" class="admin-link">
+                                    管理者画面
+                                </a>
+                            </li>
                         <?php endif; ?>
+
                         <li><a href="logout.php">ログアウト</a></li>
                     <?php else: ?>
                         <li><a href="login.php">ログイン</a></li>
@@ -39,4 +52,5 @@ if (session_status() === PHP_SESSION_NONE) {
             </nav>
         </div>
     </header>
+
     <main class="main-content">
