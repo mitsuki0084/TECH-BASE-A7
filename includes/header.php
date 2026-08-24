@@ -14,15 +14,15 @@ if (session_status() === PHP_SESSION_NONE) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>旅行プラン作成・共有ツール</title>
-    <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="/TECH-BASE-A7/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
     <header class="site-header">
         <div class="header-container">
-            <h1 class="logo">
-                <a href="index.php">旅プランナー</a>
-            </h1>
+<h1 class="logo">
+    <a href="index.php">🌈 TRIPPY ～旅行でHAPPYに～ ✈️</a>
+</h1>
 
             <nav class="main-nav">
                 <ul>

@@ -10,7 +10,7 @@
         <div class="footer-container">
             <p>
                 &copy; <?= date('Y') ?>
-                旅行プラン作成・共有ツール All Rights Reserved.
+                旅行プラン作成・共有ツール 
             </p>
         </div>
     </footer>
