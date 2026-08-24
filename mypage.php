@@ -13,12 +13,19 @@
 require_once 'config/db.php';
 require_once 'includes/header.php';
 
-// ログイン確認
+// 1. ログイン確認
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
 
+// 2. データベースから自分のプランを取得する処理
+$user_id = $_SESSION['user_id'];
+// ※config/db.phpで $pdo が定義されている前提のコードです
+$stmt = $pdo->prepare("SELECT * FROM plans WHERE user_id = :user_id ORDER BY created_at DESC");
+$stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+$stmt->execute();
+$plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
 /**
  * 削除処理
  * 【所有者チェック必須】必ず user_id 条件を付けて、他人のプランを削除できないようにする
@@ -27,6 +34,38 @@ if (!isset($_SESSION['user_id'])) {
 ?>
 
 <h2>マイページ</h2>
-<!-- TODO: 開発メインA プラン一覧表示および削除処理の実装を行うこと -->
+
+<!-- 3 & 4. 取得したプランを一覧表示する処理 -->
+<?php if (empty($plans)): ?>
+    <p>作成したプランはまだありません。</p>
+<?php else: ?>
+    <table border="1">
+        <tr>
+            <th>タイトル</th>
+            <th>日程</th>
+            <th>操作</th>
+        </tr>
+        <?php foreach ($plans as $plan): ?>
+        <tr>
+            <!-- タイトル -->
+            <td><?= htmlspecialchars($plan['title'], ENT_QUOTES, 'UTF-8') ?></td>
+            
+            <!-- 日程（開始日 〜 終了日） -->
+            <td>
+                <?= htmlspecialchars($plan['start_date'], ENT_QUOTES, 'UTF-8') ?> 〜 
+                <?= htmlspecialchars($plan['end_date'], ENT_QUOTES, 'UTF-8') ?>
+            </td>
+            
+            <!-- 編集・削除ボタン（URLパラメーターでIDを渡す） -->
+            <td>
+                <a href="plan_edit.php?id=<?= $plan['id'] ?>">編集</a>
+                
+                <!-- 削除は確認メッセージを出すと安全です -->
+                <a href="plan_delete.php?id=<?= $plan['id'] ?>" onclick="return confirm('本当に削除してよろしいですか？');">削除</a>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </table>
+<?php endif; ?>
 
 <?php require_once 'includes/footer.php'; ?>
