@@ -91,29 +91,45 @@ function initializeWeather() {
  */
 async function fetchWeather(area, container) {
     try {
-        const locationResponse = await fetch(
-            'https://geocoding-api.open-meteo.com/v1/search?' +
-            new URLSearchParams({
-                name: area,
-                count: '1',
-                language: 'ja',
-                format: 'json',
-                countryCode: 'JP'
-            })
+        const searchNames = [
+            area,
+            `${area}市`,
+            area.replace(/市$/, '')
+        ].filter((name, index, array) =>
+            name && array.indexOf(name) === index
         );
 
-        if (!locationResponse.ok) {
-            throw new Error('地域情報の取得に失敗しました。');
-        }
+        let location = null;
 
-        const locationData = await locationResponse.json();
-        const location = locationData.results?.[0];
+        for (const name of searchNames) {// 目的地の緯度経度を取得
+            const response = await fetch(
+                'https://geocoding-api.open-meteo.com/v1/search?' +
+                new URLSearchParams({
+                    name,
+                    count: '1',
+                    language: 'ja',
+                    format: 'json',
+                    countryCode: 'JP'
+                })
+            );
+
+            if (!response.ok) {
+                throw new Error('地域情報の取得に失敗しました。');
+            }
+
+            const data = await response.json();
+            location = data.results?.[0];
+
+            if (location) {
+                break;
+            }
+        }
 
         if (!location) {
             throw new Error(`地域が見つかりません: ${area}`);
         }
 
-        const weatherResponse = await fetch(
+        const weatherResponse = await fetch(// 7日間の天気予報を取得
             'https://api.open-meteo.com/v1/forecast?' +
             new URLSearchParams({
                 latitude: String(location.latitude),
@@ -147,9 +163,9 @@ async function fetchWeather(area, container) {
 /**
  * 7日間の天気情報を表示
  */
+
 function renderWeather(container, area, data, fetchedAt) {
     const daily = data.daily;
-
     if (
         !daily?.time ||
         !daily.weather_code ||

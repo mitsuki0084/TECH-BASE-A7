@@ -33,6 +33,8 @@ CREATE TABLE `plans` (
     `title` VARCHAR(100) NOT NULL COMMENT 'プランタイトル',
     `start_date` DATE NOT NULL COMMENT '旅行開始日',
     `end_date` DATE NOT NULL COMMENT '旅行終了日',
+    `description` TEXT DEFAULT NULL COMMENT 'プラン詳細',
+    `destination` VARCHAR(100) DEFAULT NULL COMMENT '目的地',
     `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '0: 非公開, 1: 公開, 2: 強制非公開(管理者操作)',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,

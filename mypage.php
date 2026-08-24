@@ -26,6 +26,11 @@ $stmt = $pdo->prepare("SELECT * FROM plans WHERE user_id = :user_id ORDER BY cre
 $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
 $stmt->execute();
 $plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+/**
+ * 削除処理
+ * 【所有者チェック必須】必ず user_id 条件を付けて、他人のプランを削除できないようにする
+ */
+// 自分が作成した全プラン（公開/非公開問わず）を取得
 ?>
 
 <h2>マイページ</h2>
