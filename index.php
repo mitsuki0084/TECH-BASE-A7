@@ -28,8 +28,9 @@ $sql = "SELECT plans.*, users.username AS user_name, tags.name AS tag_name
 $params=[];
 
 if (!empty($keyword)) {
-    $sql .= " AND (plans.title LIKE :keyword OR plans.description LIKE :keyword)";
-    $params[':keyword'] = "%$keyword%";
+    $sql .= " AND (plans.title LIKE :keyword1 OR plans.description LIKE :keyword2)";
+    $params[':keyword1'] = "%$keyword%";
+    $params[':keyword2'] = "%$keyword%";
 }
 if (!empty($tag_id)) {
     $sql .= " AND plans.tag_id = :tag_id";
@@ -76,4 +77,3 @@ $plans = $planStmt->fetchAll();
     <?php endforeach; ?>
 </div>
 <?php require_once 'includes/footer.php'; ?>
-
