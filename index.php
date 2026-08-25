@@ -20,7 +20,7 @@ $tag_id=$_GET['tag_id'] ?? '';
 $tagStmt = $pdo->query("SELECT id, name FROM tags");
 $tags=$tagStmt->fetchAll();
 
-$sql = "SELECT plans.*, users.name AS user_name, tags.name AS tag_name
+$sql = "SELECT plans.*, users.username AS user_name, tags.name AS tag_name
         FROM plans
         JOIN users ON plans.user_id = users.id
         LEFT JOIN tags ON plans.tag_id = tags.id
@@ -28,7 +28,7 @@ $sql = "SELECT plans.*, users.name AS user_name, tags.name AS tag_name
 $params=[];
 
 if (!empty($keyword)) {
-    $sql .= " AND (plans.title LIKE :keyword" OR plans.description LIKE :keyword)";
+    $sql .= " AND (plans.title LIKE :keyword OR plans.description LIKE :keyword)";
     $params[':keyword'] = "%$keyword%";
 }
 if (!empty($tag_id)) {
@@ -45,7 +45,6 @@ $plans = $planStmt->fetchAll();
 <h2>みんなの旅行プラン</h2>
 <!-- TODO: 開発メインB 検索フォームおよび公開プラン一覧表示処理の実装を行うこと -->
 
-<?php require_once 'includes/footer.php'; ?>
 
 <!--検索フォーム-->
 <form method="GET" action="">
@@ -70,10 +69,11 @@ $plans = $planStmt->fetchAll();
        <a class="card" href="plan_detail.php?id=<?= $plan['id'] ?>"> 
         
             <h3><?= htmlspecialchars($plan['title']) ?></h3>
-            <p>作成者: <?= htmlspecialchars($plan['author_name']) ?></p>
-            <p>場所: <?= htmlspecialchars($plan['tag_name']) ?></p>
+            <p>作成者: <?= htmlspecialchars($plan['user_name'], ENT_QUOTES, 'UTF-8') ?></p>
+            <p>場所:     <?= htmlspecialchars($plan['destination'] ?? '未設定', ENT_QUOTES, 'UTF-8') ?></p>
             <p>日程: <?= htmlspecialchars($plan['start_date']) ?> ～ <?= htmlspecialchars($plan['end_date']) ?></p>
         </a>
     <?php endforeach; ?>
 </div>
+<?php require_once 'includes/footer.php'; ?>
 

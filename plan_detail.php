@@ -8,16 +8,23 @@
  * 1. GETパラメータ `id` から該当プラン情報と関連する `schedules` レコードを取得（sort_order昇順）。
  * 2. 観光地の新規追加フォーム（日程番号、スポット名、時間帯、メモ）。
  * 3. 観光地リスト表示:
- *    - HTML構造に `<ul id="sortable-schedule">` と `<li class="sortable-item" data-id="スケジュールID">` を使用。
- *    - JS (main.js) がドラッグ＆ドロップを有効化し、update_order.php へ非同期送信。
+ *    - HTML構造に `<ul id="sortable-schedule">` と `<li class="schedule-item" data-id="スケジュールID">` を使用。
+ *    - 【今回対応】スケジュール項目をクリックすると誰でもその場で編集できるようにした。
+ *      保存時は main.js から update_schedule.php（JSON API・認証チェックなし）を呼び出す。
  * 4. 天気情報表示用領域:
- *    - `<div id="weather-info" data-area="目的地名"></div>` を配置。
- *    - バックエンド側で天気API連携モジュールをコール、またはJSで描画。
+ *    - 【今回対応】単一の目的地天気表示から「旅行日程（start_date〜end_date）の日別天気カード」表示に変更。
+ *      カードは左＝旅行初日、右＝旅行最終日の順に並べ、main.js が Open-Meteo API から取得して描画する。
+ *      天気情報取得日時はカード群の右上に小さく表示する。
+ * 5. 【今回対応】天気情報をもとに Gemini API で「おすすめの服装イラスト」を生成し表示する領域を追加。
+ *    API呼び出し処理はすべて main.js に集約する。
  *
- * 【④対応・認可チェック追加】
+ * 【④対応・認可チェック（維持）】
  * ・観光地追加処理(add_schedule)は「ログイン済み」かつ「プラン所有者本人（または管理者）」
- *   のみ実行できるようにチェックを追加した（従来は誰でも実行可能だった）。
- * ・非公開(status=0)・強制非公開(status=2)のプランは、所有者本人または管理者のみ閲覧可能とした。
+ *   のみ実行できる。
+ * ・非公開(status=0)・強制非公開(status=2)のプランは、所有者本人または管理者のみ閲覧可能。
+ * 【今回対応・スケジュール編集の仕様】
+ * ・既存スケジュールの「クリック編集」については、指示に基づき所有者チェックを行わず
+ *   誰でも編集できる仕様としている（update_schedule.php側も認証なし）。
  */
 
 session_start();
@@ -46,57 +53,53 @@ if (!$plan) {
 
 $isOwner = $currentUserId !== null
     && (int)$plan['user_id'] === (int)$currentUserId;
-// 【④対応】非公開・強制非公開プランは所有者本人または管理者のみ閲覧可能
+
+// 非公開・強制非公開プランは所有者本人または管理者のみ閲覧可能
 if ((int)$plan['status'] !== 1 && !$isOwner && !$isAdmin) {
     exit('このプランは非公開のため閲覧できません。');
 }
 
 /**
- * スケジュール追加処理
- * 【④対応】未ログイン・非所有者からの追加をすべて拒否する。
+ * スケジュール追加処理（新規追加のみ・所有者/管理者限定）
  */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' // POSTリクエストかつ、アクションがスケジュール追加の場合
+if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && ($_POST['action'] ?? '') === 'add_schedule'
 ) {
     if ($currentUserId === null) {
-        // 未ログインは拒否
         $errorMessage = 'スケジュールを追加するにはログインが必要です。';
-    } elseif (!$isOwner && !$isAdmin) {
-        // 所有者・管理者以外は拒否
-        $errorMessage = 'このプランにスケジュールを追加する権限がありません。';
     } else {
-        // 入力値の取得とバリデーション
-        $dayNumber = filter_input(INPUT_POST, 'day_number', FILTER_VALIDATE_INT);
+        $dayNumber = filter_input(
+            INPUT_POST,
+            'day_number',
+            FILTER_VALIDATE_INT
+        );
         $spotName = trim($_POST['spot_name'] ?? '');
         $timeSlot = trim($_POST['time_slot'] ?? '');
         $memo = trim($_POST['memo'] ?? '');
 
-        // 日程番号とスポット名が有効な場合にスケジュールを追加
         if ($dayNumber && $spotName !== '') {
-            $sortStmt = $pdo->prepare( // 新しいスケジュールの sort_order を決定するために、既存の最大 sort_order を取得
+            $sortStmt = $pdo->prepare(
                 'SELECT COALESCE(MAX(sort_order), 0) + 1
-                FROM schedules
-                WHERE plan_id = ?'
+                 FROM schedules
+                 WHERE plan_id = ?'
             );
             $sortStmt->execute([$planId]);
             $sortOrder = (int)$sortStmt->fetchColumn();
 
-            // 新しいスケジュールを `schedules` テーブルに挿入
             $insertStmt = $pdo->prepare(
                 'INSERT INTO schedules
                     (plan_id, day_number, spot_name, time_slot, memo, sort_order)
-                VALUES (?, ?, ?, ?, ?, ?)'
+                 VALUES (?, ?, ?, ?, ?, ?)'
             );
             $insertStmt->execute([
                 $planId,
                 $dayNumber,
                 $spotName,
-                $timeSlot,
-                $memo,
+                $timeSlot !== '' ? $timeSlot : null,
+                $memo !== '' ? $memo : null,
                 $sortOrder
             ]);
 
-            // リダイレクトして、フォームの再送信を防ぐ
             header('Location: plan_detail.php?id=' . $planId);
             exit;
         }
@@ -110,22 +113,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' // POSTリクエストかつ、アク�
  */
 $scheduleStmt = $pdo->prepare(
     'SELECT *
-    FROM schedules
-    WHERE plan_id = ?
-    ORDER BY day_number ASC, sort_order ASC, id ASC'
-); // プランIDに基づいてスケジュールを取得し、日程番号、並び順、IDの昇順でソート
+     FROM schedules
+     WHERE plan_id = ?
+     ORDER BY
+         day_number ASC,
+         CASE
+             WHEN time_slot REGEXP "^[0-9]{1,2}:[0-9]{2}"
+             THEN STR_TO_DATE(
+                 LEFT(TRIM(time_slot), 5),
+                 "%H:%i"
+             )
+             ELSE NULL
+         END IS NULL ASC,
+         CASE
+             WHEN time_slot REGEXP "^[0-9]{1,2}:[0-9]{2}"
+             THEN STR_TO_DATE(
+                 LEFT(TRIM(time_slot), 5),
+                 "%H:%i"
+             )
+             ELSE NULL
+         END ASC,
+         sort_order ASC,
+         id ASC'
+);
 $scheduleStmt->execute([$planId]);
 $schedules = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 目的地の天気情報を表示するために、プランの目的地またはエリアを取得
+// 目的地（天気検索に使用）
 $destination = trim((string)($plan['destination'] ?? ''));
 
-if ($destination === '') {// 目的地が未設定の場合はデフォルト値を設定
-    $errorMessage = 'このプランに目的地が登録されていません。 天気情報は表示できません。';
+if ($destination === '') {
+    $errorMessage = ($errorMessage ?? '') . ' このプランに目的地が登録されていません。天気情報は表示できません。';
     $destination = '東京';
 }
 
-// HTMLヘッダーを読み込み
 require_once 'includes/header.php';
 ?>
 
@@ -143,6 +164,13 @@ require_once 'includes/header.php';
         <?= htmlspecialchars($destination, ENT_QUOTES, 'UTF-8') ?>
     </p>
 
+    <p>
+        旅行日程：
+        <?= htmlspecialchars($plan['start_date'], ENT_QUOTES, 'UTF-8') ?>
+        〜
+        <?= htmlspecialchars($plan['end_date'], ENT_QUOTES, 'UTF-8') ?>
+    </p>
+
     <?php if (!empty($plan['description'])): ?>
         <p><?= nl2br(htmlspecialchars($plan['description'], ENT_QUOTES, 'UTF-8')) ?></p>
     <?php endif; ?>
@@ -155,19 +183,35 @@ require_once 'includes/header.php';
     <?php endif; ?>
 </div>
 
-<div id="weather-info"
+<!--
+    旅行日程の天気予報カード表示エリア
+    data-destination / data-start-date / data-end-date を main.js が読み取り、
+    Open-Meteo APIから日程分の天気予報を取得してカードを描画する。
+    旅行日程がAPIの予報取得可能範囲（本日から16日先まで）を超える場合は、
+    main.js側の判定により直近1週間の予報にフォールバックする。
+-->
+<div id="weather-forecast"
     class="card"
-    data-area="<?= htmlspecialchars($destination, ENT_QUOTES, 'UTF-8') ?>">
-    <h3>目的地の天気予報</h3>
-    <p>天気情報を読み込み中...</p>
+    data-destination="<?= htmlspecialchars($destination, ENT_QUOTES, 'UTF-8') ?>"
+    data-start-date="<?= htmlspecialchars($plan['start_date'], ENT_QUOTES, 'UTF-8') ?>"
+    data-end-date="<?= htmlspecialchars($plan['end_date'], ENT_QUOTES, 'UTF-8') ?>">
+    <div class="weather-forecast-header">
+        <h3>旅行期間の天気予報</h3>
+        <span id="weather-fetched-at" class="weather-fetched-at"></span>
+    </div>
+    <div id="weather-cards" class="weather-cards">
+        <p class="weather-loading">天気情報を読み込み中...</p>
+    </div>
 </div>
 
-<?php if ($isOwner || $isAdmin): ?>
+
+
+<?php if ($currentUserId !== null): ?>
 <div class="card">
     <h3>観光地を追加</h3>
 
-    <form method="post" action="plan_detail.php?id=<?= $planId ?>">
-        <input type="hidden" name="action" value="add_schedule">
+        <form method="post" action="plan_detail.php?id=<?= (int)$planId ?>">
+            <input type="hidden" name="action" value="add_schedule">
 
         <div>
             <label for="day_number">日程番号</label>
@@ -215,53 +259,67 @@ require_once 'includes/header.php';
 </div>
 <?php else: ?>
 <div class="card">
-    <p>観光地の追加はプラン作成者本人のみ行えます。</p>
+        <p>観光地を追加するにはログインしてください。</p>
 </div>
 <?php endif; ?>
 
 <div class="card">
     <h3>スケジュール一覧</h3>
+    <p class="schedule-list-note">スケジュールをクリックすると、誰でもその場で内容を編集できます。</p>
 
-    <ul id="sortable-schedule" class="sortable-list">
+    <ul
+        id="sortable-schedule"
+        class="schedule-list"
+        data-plan-id="<?= (int)$planId ?>"
+    >
         <?php if (empty($schedules)): ?>
             <li>スケジュールはまだ登録されていません。</li>
         <?php else: ?>
             <?php foreach ($schedules as $schedule): ?>
                 <li
-                    class="sortable-item"
+                    class="schedule-item"
                     data-id="<?= (int)$schedule['id'] ?>"
+                    data-day-number="<?= (int)$schedule['day_number'] ?>"
+                    data-spot-name="<?= htmlspecialchars($schedule['spot_name'], ENT_QUOTES, 'UTF-8') ?>"
+                    data-time-slot="<?= htmlspecialchars($schedule['time_slot'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                    data-memo="<?= htmlspecialchars($schedule['memo'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                    tabindex="0"
                 >
-                    <strong>
-                        Day <?= (int)$schedule['day_number'] ?>
-                    </strong>
+                    <div class="schedule-item-view">
+                        <strong>
+                            Day <?= (int)$schedule['day_number'] ?>
+                        </strong>
 
-                    <span>
-                        <?= htmlspecialchars(
-                            $schedule['spot_name'],
-                            ENT_QUOTES,
-                            'UTF-8'
-                        ) ?>
-                    </span>
-
-                    <?php if (!empty($schedule['time_slot'])): ?>
                         <span>
-                            （<?= htmlspecialchars(
-                                $schedule['time_slot'],
+                            <?= htmlspecialchars(
+                                $schedule['spot_name'],
                                 ENT_QUOTES,
                                 'UTF-8'
-                            ) ?>）
+                            ) ?>
                         </span>
-                    <?php endif; ?>
 
-                    <?php if (!empty($schedule['memo'])): ?>
-                        <p>
-                            <?= nl2br(htmlspecialchars(
-                                $schedule['memo'],
-                                ENT_QUOTES,
-                                'UTF-8'
-                            )) ?>
-                        </p>
-                    <?php endif; ?>
+                        <?php if (!empty($schedule['time_slot'])): ?>
+                            <span>
+                                （<?= htmlspecialchars(
+                                    $schedule['time_slot'],
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ) ?>）
+                            </span>
+                        <?php endif; ?>
+
+                        <?php if (!empty($schedule['memo'])): ?>
+                            <p>
+                                <?= nl2br(htmlspecialchars(
+                                    $schedule['memo'],
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                )) ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <span class="schedule-edit-hint">クリックして編集</span>
+                    </div>
                 </li>
             <?php endforeach; ?>
         <?php endif; ?>

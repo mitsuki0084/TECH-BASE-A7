@@ -53,6 +53,27 @@ CREATE TABLE `schedules` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`plan_id`) REFERENCES `plans`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+-- 5. スケジュール編集ログテーブル
+CREATE TABLE `edit_logs` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `schedule_id` INT NOT NULL COMMENT '編集対象のスケジュールID',
+    `user_id` INT DEFAULT NULL COMMENT '編集したユーザーID',
+    `old_day_number` INT NOT NULL,
+    `new_day_number` INT NOT NULL,
+    `old_spot_name` VARCHAR(100) NOT NULL,
+    `new_spot_name` VARCHAR(100) NOT NULL,
+    `old_time_slot` VARCHAR(50) DEFAULT NULL,
+    `new_time_slot` VARCHAR(50) DEFAULT NULL,
+    `old_memo` TEXT DEFAULT NULL,
+    `new_memo` TEXT DEFAULT NULL,
+    `ip_address` VARCHAR(45) DEFAULT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (`schedule_id`)
+        REFERENCES `schedules`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`)
+        REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
 
 -- テストデータの初期投入
 INSERT INTO `users` (`username`, `email`, `password`, `role`) VALUES

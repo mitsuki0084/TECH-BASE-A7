@@ -14,7 +14,7 @@
             </p>
         </div>
     </footer>
-
     <script src="/TECH-BASE-A7/js/main.js"></script>
+
 </body>
 </html>

@@ -152,133 +152,397 @@ body {
     background-color: #d9534f;
 }
 
-/* D&D リスト表示スタイル */
-.sortable-list {
-    list-style: none;
-    padding: 0;
-}
-
-.sortable-item {
-    background: #fff;
-    border: 1px solid #ddd;
-    margin-bottom: 8px;
-    padding: 12px;
-    border-radius: 4px;
-    cursor: move;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* 全体 */
-body {
-    font-family: "Arial", "メイリオ", sans-serif;
-    background: linear-gradient(135deg, #fff8fb, #fffbea);
-    color: #555;
-}
-
-/* 見出し */
-h1, h2, h3 {
-    color: #ff6f9f;
-    margin-bottom: 18px;
-}
-
-h2 {
-    display: inline-block;
-    padding: 8px 18px;
-    background: #fff176;
-    border-radius: 25px;
-    box-shadow: 0 4px 0 #ffd45c;
-}
-
-/* カード */
-.card {
-    border: 3px solid #ffd6e3;
-    border-radius: 20px;
-    box-shadow: 0 5px 12px rgba(255, 126, 165, 0.18);
-}
-
-/* 入力欄 */
-.form-group input,
-.form-group select,
-.form-group textarea {
-    border: 2px solid #ffd1df;
-    border-radius: 12px;
-    background: #fffdfd;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #ff91b5;
-    box-shadow: 0 0 0 3px #ffe1eb;
-}
-
-/* ボタン */
-.btn {
-    background: linear-gradient(135deg, #ff78a5, #ffab7a);
-    border-radius: 25px;
-    padding: 10px 20px;
-    font-weight: bold;
-    box-shadow: 0 4px 0 #e96791;
-    transition: 0.2s;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #e96791;
-}
-
-.btn-danger {
-    background: #ff8585;
-    box-shadow: 0 4px 0 #df6262;
-}
-
-/* テーブル */
-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    overflow: hidden;
-    background: #fff;
-    border: 3px solid #ffd6e3;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(255, 126, 165, 0.15);
-}
-
-th {
-    background: #ffb6c1;
-    color: #fff;
-    padding: 12px;
-}
-
-td {
-    padding: 12px;
-    border-top: 1px solid #ffe1eb;
-    text-align: center;
-}
-
-tr:hover td {
-    background: #fff8d8;
-}
-
-/* スケジュール */
-.sortable-item {
-    border: 3px solid #c9f0e8;
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 3px 8px rgba(100, 190, 170, 0.15);
-}
-
-.sortable-item:hover {
-    background: #f1fffb;
-}
-
 /* フッター */
 .site-footer {
     background: linear-gradient(135deg, #ff91b5, #8bdccc);
     color: #fff;
     border-top: 5px solid #fff4a8;
     font-weight: bold;
+}
+
+/* プランカード一覧 */
+.card_list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+/* プランカード */
+.card_list .card {
+    display: block;
+    padding: 24px;
+    background: linear-gradient(135deg, #ffffff, #fff8fb);
+    border: 3px solid #ffd1df;
+    border-radius: 22px;
+    color: #555;
+    text-decoration: none;
+    box-shadow: 0 6px 0 #ffc2d6;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card_list .card:hover {
+    transform: translateY(-6px) rotate(1deg);
+    box-shadow: 0 11px 0 #ffabc5;
+}
+
+/* プランタイトル */
+.card_list .card h3 {
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    color: #ff6699;
+    border-bottom: 2px dashed #ffd1df;
+}
+
+/* 作成者・場所・日程 */
+.card_list .card p {
+    margin: 9px 0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background-color: #fff4c7;
+    font-size: 0.95rem;
+}
+
+.card_list .card p:nth-of-type(1) {
+    background-color: #ffe5ee;
+}
+
+.card_list .card p:nth-of-type(2) {
+    background-color: #dff8f1;
+}
+
+.card_list .card p:nth-of-type(3) {
+    background-color: #fff3bd;
+}
+
+/* 検索結果がない場合など */
+.card_list:empty::after {
+    content: "プランが見つかりませんでした。";
+    color: #ff6699;
+    font-weight: bold;
+}
+
+/* スマートフォン対応 */
+@media (max-width: 600px) {
+    .card_list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* スケジュール一覧 */
+.schedule-list {
+    list-style: none;
+    padding: 0;
+}
+
+.schedule-item {
+    margin-bottom: 12px;
+    padding: 16px;
+    background: #fff;
+    border: 3px solid #c9f0e8;
+    border-radius: 16px;
+    box-shadow: 0 3px 8px rgba(100, 190, 170, 0.15);
+}
+
+.schedule-item p {
+    margin-top: 8px;
+}
+
+/* プラン詳細ページ */
+.main-content > h2 {
+    margin-bottom: 20px;
+    padding: 10px 22px;
+    color: #ff6699;
+    background: #fff176;
+    border-radius: 30px;
+    box-shadow: 0 4px 0 #ffd45c;
+}
+
+/* 詳細情報・天気・追加フォーム */
+.main-content .card {
+    background: linear-gradient(135deg, #ffffff, #fff8fb);
+    border: 3px solid #ffd1df;
+    border-radius: 22px;
+    box-shadow: 0 6px 0 #ffc2d6;
+}
+
+.main-content .card h3 {
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    color: #ff6699;
+    border-bottom: 2px dashed #ffd1df;
+}
+
+/* 天気表示（旧・単一目的地カード用。互換のため残置） */
+#weather-info {
+    background: linear-gradient(135deg, #fff4bd, #dff8f1);
+    border: 3px solid #9ee7d8;
+    border-radius: 22px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 5px 0 #a8ded2;
+}
+
+#weather-info h3 {
+    color: #e58b00;
+}
+
+/* スケジュール見出し */
+.schedule-list-title {
+    display: inline-block;
+    margin: 20px 0 12px;
+    padding: 8px 18px;
+    color: #fff;
+    background: #ff91b5;
+    border-radius: 25px;
+}
+
+/* スケジュール項目 */
+.schedule-item {
+    background: linear-gradient(135deg, #ffffff, #f1fffb);
+    border: 3px solid #9ee7d8;
+    box-shadow: 0 4px 0 #b8e8dc;
+    cursor: pointer;
+}
+
+.schedule-item strong {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 4px 10px;
+    color: #fff;
+    background: #ff91b5;
+    border-radius: 15px;
+}
+
+/* 入力フォーム */
+.main-content form.card input,
+.main-content form.card select,
+.main-content form.card textarea {
+    border: 2px solid #ffd1df;
+    border-radius: 12px;
+    background: #fffdfd;
+}
+
+.main-content form.card input:focus,
+.main-content form.card select:focus,
+.main-content form.card textarea:focus {
+    outline: none;
+    border-color: #ff91b5;
+    box-shadow: 0 0 0 3px #ffe1eb;
+}
+
+/* ボタン */
+.main-content .btn {
+    background: linear-gradient(135deg, #ff78a5, #ffab7a);
+    border-radius: 25px;
+    box-shadow: 0 4px 0 #e96791;
+    font-weight: bold;
+}
+
+.main-content .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #e96791;
+}
+
+/* エラーメッセージ */
+.error,
+.error-message {
+    padding: 12px 16px;
+    color: #c94f68;
+    background: #ffe5ee;
+    border: 2px solid #ffabc5;
+    border-radius: 14px;
+    font-weight: bold;
+}
+
+/* ============================================================
+ * 追加スタイル：旅行日程の天気予報カード表示
+ * ============================================================ */
+
+#weather-forecast {
+    background: linear-gradient(135deg, #fff4bd, #dff8f1);
+    border: 3px solid #9ee7d8;
+    border-radius: 22px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 5px 0 #a8ded2;
+    position: relative;
+}
+
+.weather-forecast-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.weather-forecast-header h3 {
+    color: #e58b00;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+/* 天気情報取得日時：カード群の右上に小さく表示 */
+.weather-fetched-at {
+    font-size: 0.72rem;
+    color: #7a8a86;
+    white-space: nowrap;
+}
+
+.weather-loading,
+.weather-error {
+    padding: 12px 4px;
+    color: #7a8a86;
+}
+
+.weather-fallback-notice {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    color: #a06a00;
+    background: #fff3cf;
+    border: 2px dashed #ffcf6b;
+    border-radius: 14px;
+}
+
+/* 日別天気カード：横並び。左＝旅行初日、右＝旅行最終日 */
+.weather-cards {
+    display: flex;
+    flex-direction: row;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.weather-card {
+    flex: 0 0 150px;
+    background: #ffffff;
+    border: 2px solid #c9f0e8;
+    border-radius: 18px;
+    padding: 14px 12px;
+    text-align: center;
+    box-shadow: 0 3px 6px rgba(100, 190, 170, 0.15);
+}
+
+.weather-card-day {
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: #ff6699;
+    margin-bottom: 2px;
+}
+
+.weather-card-date {
+    font-size: 0.78rem;
+    color: #888;
+    margin-bottom: 6px;
+}
+
+.weather-card-icon {
+    font-size: 2rem;
+    margin: 4px 0;
+}
+
+.weather-card-desc {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.weather-card-temp {
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.weather-card-temp .temp-max {
+    color: #ff6f5c;
+}
+
+.weather-card-temp .temp-min {
+    color: #4a90d9;
+}
+
+.weather-card-detail {
+    font-size: 0.78rem;
+    color: #666;
+    margin-top: 2px;
+}
+
+@media (max-width: 600px) {
+    .weather-card {
+        flex: 0 0 130px;
+    }
+}
+
+/* ============================================================
+ * 追加スタイル：スケジュールのクリック編集
+ * ============================================================ */
+
+.schedule-list-note {
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.schedule-item.is-editing {
+    cursor: default;
+}
+
+.schedule-edit-hint {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.72rem;
+    color: #9ecdbf;
+}
+
+.schedule-edit-form {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 2px dashed #c9f0e8;
+    cursor: default;
+}
+
+.schedule-edit-form div {
+    margin-bottom: 10px;
+}
+
+.schedule-edit-form label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #555;
+}
+
+.schedule-edit-form input,
+.schedule-edit-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #ffd1df;
+    border-radius: 10px;
+    background: #fffdfd;
+}
+
+.schedule-edit-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.schedule-edit-actions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.schedule-edit-actions button[type="submit"] {
+    background: linear-gradient(135deg, #ff78a5, #ffab7a);
+    color: #fff;
+}
+
+.schedule-edit-actions .schedule-edit-cancel {
+    background: #eee;
+    color: #555;
 }
