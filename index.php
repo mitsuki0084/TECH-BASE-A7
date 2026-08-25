@@ -20,7 +20,26 @@ $tag_id=$_GET['tag_id'] ?? '';
 $tagStmt = $pdo->query("SELECT id, name FROM tags");
 $tags=$tagStmt->fetchAll();
 
+$sql = "SELECT plans.*, users.name AS user_name, tags.name AS tag_name
+        FROM plans
+        JOIN users ON plans.user_id = users.id
+        LEFT JOIN tags ON plans.tag_id = tags.id
+        WHERE plans.status = 1";
+$params=[];
 
+if (!empty($keyword)) {
+    $sql .= " AND (plans.title LIKE :keyword" OR plans.description LIKE :keyword)";
+    $params[':keyword'] = "%$keyword%";
+}
+if (!empty($tag_id)) {
+    $sql .= " AND plans.tag_id = :tag_id";
+    $params[':tag_id'] = $tag_id;
+}
+
+$sql .= " ORDER BY plans.created_at DESC";
+$planStmt = $pdo->prepare($sql);
+$planStmt->execute($params);
+$plans = $planStmt->fetchAll();
 ?>
 
 <h2>みんなの旅行プラン</h2>
